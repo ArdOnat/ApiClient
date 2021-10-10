@@ -1,0 +1,25 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "Alamofire",
+        "repositoryURL": "https://github.com/Alamofire/Alamofire.git",
+        "state": {
+          "branch": null,
+          "revision": "f96b619bcb2383b43d898402283924b80e2c4bae",
+          "version": "5.4.3"
+        }
+      },
+      {
+        "package": "CoreModule",
+        "repositoryURL": "https://github.com/ArdOnat/CoreModule.git",
+        "state": {
+          "branch": null,
+          "revision": "a3225335006c157ed007205a56a7e722c4961650",
+          "version": "1.1.2"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
