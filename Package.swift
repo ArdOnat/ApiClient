@@ -16,7 +16,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/Alamofire/Alamofire.git", .exact("5.4.3")),
-        .package(url: "https://github.com/ArdOnat/CoreModule.git", .exact("1.1.2"))
+        .package(url: "https://github.com/ArdOnat/CoreModule.git", .exact("1.1.3"))
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
     ],
