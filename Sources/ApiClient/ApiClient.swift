@@ -9,7 +9,7 @@ import Foundation
 import Alamofire
 import CoreModule
 
-public class ApiClient: CoreModule.ApiClient {
+public class ApiClient: NetworkClient {
     
     // MARK: Singleton
     public static let shared = ApiClient()
