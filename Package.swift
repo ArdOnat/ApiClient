@@ -15,7 +15,7 @@ let package = Package(
             targets: ["ApiClient"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/Alamofire/Alamofire.git", .exact("5.4.3")),
+        .package(url: "https://github.com/Alamofire/Alamofire.git", .exact("5.4.4")),
         .package(url: "https://github.com/ArdOnat/CoreModule.git", .exact("1.1.4"))
     ],
     targets: [
