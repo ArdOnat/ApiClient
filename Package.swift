@@ -15,7 +15,6 @@ let package = Package(
             targets: ["ApiClient"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/Alamofire/Alamofire.git", .exact("5.4.4")),
         .package(url: "https://github.com/ArdOnat/CoreModule.git", .exact("1.1.5"))
     ],
     targets: [
@@ -23,7 +22,7 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "ApiClient",
-            dependencies: ["Alamofire", "CoreModule"]),
+            dependencies: ["CoreModule"]),
         .testTarget(
             name: "ApiClientTests",
             dependencies: ["ApiClient"]),

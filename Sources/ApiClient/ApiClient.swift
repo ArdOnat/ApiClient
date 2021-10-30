@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Alamofire
 import CoreModule
 
 public class ApiClient: NetworkClient {
@@ -43,14 +42,24 @@ public class ApiClient: NetworkClient {
         guard let request = try? self.buildRequest(from: request) else {
             return completion(.failure(.invalidRequest))
         }
-        AF.request(request).validate().responseDecodable(of: T.self, queue: queue) { response in
-            switch response.result {
-            case .success(let decodableResult):
-                completion(.success(decodableResult))
-            case .failure(_):
-                completion(.failure(.invalidStatusCode))
+        
+        let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+            if let error = error {
+                completion(.failure(.custom(errorText: error.localizedDescription)))
+            } else {
+                if let response = response, response.validateStatusCode() {
+                    if let data = data, let decodedResponse = try? JSONDecoder().decode(T.self, from: data) {
+                        completion(.success(decodedResponse))
+                    } else {
+                        completion(.failure(.decodingFailed))
+                    }
+                } else {
+                    response == nil ? completion(.failure(.custom(errorText: "URL response is nil."))) : completion(.failure(.invalidStatusCode))
+                }
             }
         }
+        
+        task.resume()
     }
 
     fileprivate func buildRequest(from requestToMake: CoreModule.Request) throws -> URLRequest {
@@ -102,6 +111,18 @@ public class ApiClient: NetworkClient {
         guard let headers = additionalHeaders else { return }
         for (key, value) in headers {
             request.setValue(value, forHTTPHeaderField: key)
+        }
+    }
+}
+
+extension URLResponse {
+    var acceptableStatusCodes: Range<Int> { 200..<300 }
+    
+    func validateStatusCode() -> Bool {
+        if let httpURLResponse = self as? HTTPURLResponse, acceptableStatusCodes.contains(httpURLResponse.statusCode) {
+            return true
+        } else {
+            return false
         }
     }
 }
