@@ -47,14 +47,17 @@ public class ApiClient: NetworkClient {
             if let error = error {
                 completion(.failure(.custom(errorText: error.localizedDescription)))
             } else {
-                if let response = response, response.validateStatusCode() {
-                    if let data = data, let decodedResponse = try? JSONDecoder().decode(T.self, from: data) {
+                if  let response = response,
+                    response.validateStatusCode() {
+                    if let data = data,
+                    let decodedResponse = try? JSONDecoder().decode(T.self, from: data) {
                         completion(.success(decodedResponse))
                     } else {
                         completion(.failure(.decodingFailed))
                     }
-                } else {
-                    response == nil ? completion(.failure(.custom(errorText: "URL response is nil."))) : completion(.failure(.invalidStatusCode))
+                }
+                else if let response = response {
+                    completion(.failure(.invalidStatusCode(response: response)))
                 }
             }
         }
