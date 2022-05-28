@@ -55,9 +55,8 @@ public class ApiClient: NetworkClient {
                     } else {
                         completion(.failure(.decodingFailed))
                     }
-                }
-                else if let response = response {
-                    completion(.failure(.invalidStatusCode(response: response)))
+                } else if let data = data {
+                    completion(.failure(.invalidStatusCode(responseData: data)))
                 }
             }
         }
