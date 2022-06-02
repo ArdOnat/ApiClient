@@ -56,14 +56,18 @@ public class ApiClient: NetworkClient {
                         completion(.failure(.decodingFailed))
                     }
                 } else if let data = data {
-                    completion(.failure(.invalidStatusCode(responseData: data)))
+                    completion(.failure(.invalidStatusCode(responseData: data, task: URLSession.shared.dataTask(with: request))))
                 }
             }
         }
         
         task.resume()
     }
-
+    
+    public func request<T>(_ task: URLSessionDataTask, queue: DispatchQueue = .main, completion: @escaping (Result<T, NetworkError>) -> ()) where T : Decodable {
+        task.resume()
+    }
+    
     fileprivate func buildRequest(from requestToMake: CoreModule.Request) throws -> URLRequest {
         guard let baseURL = URL(string: requestToMake.apiEnvironment.baseURL) else {
             throw NetworkError.invalidBaseURL
