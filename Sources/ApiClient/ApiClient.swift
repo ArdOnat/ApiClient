@@ -39,11 +39,11 @@ public class ApiClient: NetworkClient {
     }
     
     public func request<T>(_ request: CoreModule.Request, queue: DispatchQueue = .main, completion: @escaping (Result<T, NetworkError>) -> ()) where T : Decodable {
-        guard let request = try? self.buildRequest(from: request) else {
+        guard let urlRequest = try? self.buildRequest(from: request) else {
             return completion(.failure(.invalidRequest))
         }
         
-        let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+        let task = URLSession.shared.dataTask(with: urlRequest) { (data, response, error) in
             if let error = error {
                 completion(.failure(.custom(errorText: error.localizedDescription)))
             } else {
@@ -56,7 +56,7 @@ public class ApiClient: NetworkClient {
                         completion(.failure(.decodingFailed))
                     }
                 } else if let data = data {
-                    completion(.failure(.invalidStatusCode(responseData: data, task: URLSession.shared.dataTask(with: request))))
+                    completion(.failure(.invalidStatusCode(requestDetail: (data, request, completion as! Completion))))
                 }
             }
         }
