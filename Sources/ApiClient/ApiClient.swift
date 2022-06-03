@@ -56,15 +56,11 @@ public class ApiClient: NetworkClient {
                         completion(.failure(.decodingFailed))
                     }
                 } else if let data = data {
-                    completion(.failure(.invalidStatusCode(requestDetail: (data, request, completion as! Completion))))
+                    completion(.failure(.invalidStatusCode(requestDetail: (data, request))))
                 }
             }
         }
         
-        task.resume()
-    }
-    
-    public func request<T>(_ task: URLSessionDataTask, queue: DispatchQueue = .main, completion: @escaping (Result<T, NetworkError>) -> ()) where T : Decodable {
         task.resume()
     }
     
