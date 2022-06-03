@@ -38,7 +38,7 @@ public class ApiClient: NetworkClient {
         ApiClient.defaultParameterConfig = defaultParameterConfig
     }
     
-    public func request<T>(_ request: CoreModule.Request, queue: DispatchQueue = .main, completion: @escaping (Result<T, NetworkError>) -> ()) where T : Decodable {
+    public func request<T>(_ request: CoreModule.Request, queue: DispatchQueue = .main, completion: @escaping (Result<SuccessResult<T>, NetworkError>) -> ()) where T : Decodable {
         guard let urlRequest = try? self.buildRequest(from: request) else {
             return completion(.failure(.invalidRequest))
         }
@@ -50,8 +50,9 @@ public class ApiClient: NetworkClient {
                 if  let response = response,
                     response.validateStatusCode() {
                     if let data = data,
+                    let httpUrlResponse = response as? HTTPURLResponse,
                     let decodedResponse = try? JSONDecoder().decode(T.self, from: data) {
-                        completion(.success(decodedResponse))
+                        completion(.success(SuccessResult(decodedResponse: decodedResponse, httpURLResponse: httpUrlResponse)))
                     } else {
                         completion(.failure(.decodingFailed))
                     }

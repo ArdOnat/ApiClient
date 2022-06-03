@@ -27,8 +27,8 @@ final class ApiClientTests: XCTestCase {
             }
         }
     
-        ApiClient.shared.request(HomePageRequest.init(request: .fetchWeatherDataWithCityName(cityName: "Istanbul"), apiEnvironment: ApiEnvironment(environmentType: WeatherForecastNetworkEnvironment.prod)), completion: completion)
-        wait(for: [expectation], timeout: 10.0)
+        //ApiClient.shared.request(HomePageRequest.init(request: .fetchWeatherDataWithCityName(cityName: "Istanbul"), apiEnvironment: ApiEnvironment(environmentType: WeatherForecastNetworkEnvironment.prod)), completion: completion)
+        //wait(for: [expectation], timeout: 10.0)
     }
     
     private struct HomePageRequest: Request {
