@@ -1,10 +1,3 @@
-//
-//  JSONParameterEncoder.swift
-//
-//
-//  Created by Arda Onat on 6.09.2021.
-//
-
 import CoreModule
 import Foundation
 

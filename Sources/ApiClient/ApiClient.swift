@@ -1,10 +1,3 @@
-//
-//  File.swift
-//
-//
-//  Created by Arda Onat on 6.09.2021.
-//
-
 import CoreModule
 import Foundation
 
@@ -39,7 +32,11 @@ public class ApiClient: NetworkClient {
         ApiClient.defaultParameterConfig = defaultParameterConfig
     }
 
-    public func request<T>(_ request: CoreModule.Request, queue _: DispatchQueue = .main, completion: @escaping (Result<SuccessResult<T>, NetworkError>) -> Void) where T: Decodable {
+    public func request<T>(
+        _ request: CoreModule.Request,
+        queue _: DispatchQueue = .main,
+        completion: @escaping (Result<SuccessResult<T>, NetworkError>) -> Void
+    ) where T: Decodable {
         guard let urlRequest = try? buildRequest(from: request) else {
             return completion(.failure(.invalidRequest))
         }
@@ -48,19 +45,28 @@ public class ApiClient: NetworkClient {
             if let error = error {
                 completion(.failure(.custom(errorText: error.localizedDescription)))
             } else {
-                if let response = response,
-                   response.validateStatusCode()
+                if
+                    let response = response,
+                    response.validateStatusCode()
                 {
-                    if let data = data,
-                       let httpUrlResponse = response as? HTTPURLResponse,
-                       let decodedResponse = try? JSONDecoder().decode(T.self, from: data)
+                    if
+                        let data = data,
+                        let httpUrlResponse = response as? HTTPURLResponse,
+                        let decodedResponse = try? JSONDecoder().decode(T.self, from: data)
                     {
-                        completion(.success(SuccessResult(decodedResponse: decodedResponse, httpURLResponse: httpUrlResponse)))
+                        completion(.success(SuccessResult(
+                            decodedResponse: decodedResponse,
+                            httpURLResponse: httpUrlResponse
+                        )))
                     } else {
                         completion(.failure(.decodingFailed))
                     }
                 } else if let data = data, let httpUrlResponse = response as? HTTPURLResponse {
-                    let erroredRequestDetail = ErroredRequestDetail(statusCode: httpUrlResponse.statusCode, errorResponseData: data, request: request)
+                    let erroredRequestDetail = ErroredRequestDetail(
+                        statusCode: httpUrlResponse.statusCode,
+                        errorResponseData: data,
+                        request: request
+                    )
                     completion(.failure(.invalidStatusCode(requestDetail: erroredRequestDetail)))
                 }
             }
@@ -74,21 +80,33 @@ public class ApiClient: NetworkClient {
             throw NetworkError.invalidBaseURL
         }
 
-        var request = URLRequest(url: baseURL.appendingPathComponent(requestToMake.path), cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 10.0)
+        var request = URLRequest(
+            url: baseURL.appendingPathComponent(requestToMake.path),
+            cachePolicy: .reloadIgnoringLocalAndRemoteCacheData,
+            timeoutInterval: 10.0
+        )
         request.httpMethod = requestToMake.httpMethod.rawValue
 
         do {
             if let additionalHeaders = requestToMake.httpHeaders {
                 addAdditionalHeaders(additionalHeaders, request: &request)
             }
-            try configureParameters(bodyParameters: requestToMake.bodyParameters, urlParameters: requestToMake.urlParameters, request: &request)
+            try configureParameters(
+                bodyParameters: requestToMake.bodyParameters,
+                urlParameters: requestToMake.urlParameters,
+                request: &request
+            )
             return request
         } catch {
             throw error
         }
     }
 
-    fileprivate func configureParameters(bodyParameters: Parameters?, urlParameters: Parameters?, request: inout URLRequest) throws {
+    fileprivate func configureParameters(
+        bodyParameters: Parameters?,
+        urlParameters: Parameters?,
+        request: inout URLRequest
+    ) throws {
         do {
             if var bodyParameters = bodyParameters {
                 if let defaultBodyParameters = ApiClient.defaultParameterConfig?.defaultBodyParameters {

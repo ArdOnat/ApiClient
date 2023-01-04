@@ -1,10 +1,3 @@
-//
-//  URLParameterEncoder.swift
-//
-//
-//  Created by Arda Onat on 6.09.2021.
-//
-
 import CoreModule
 import Foundation
 
@@ -16,7 +9,10 @@ public final class URLParameterEncoder: ParameterEncoder {
             urlComponents.queryItems = [URLQueryItem]()
 
             for (key, value) in parameters {
-                let queryItem = URLQueryItem(name: key, value: "\(value)".addingPercentEncoding(withAllowedCharacters: .urlHostAllowed))
+                let queryItem = URLQueryItem(
+                    name: key,
+                    value: "\(value)".addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)
+                )
                 urlComponents.queryItems?.append(queryItem)
             }
             urlRequest.url = urlComponents.url
