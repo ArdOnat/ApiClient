@@ -2,9 +2,13 @@ import CoreModule
 import Foundation
 
 public class ApiClient: NetworkClient {
-    // MARK: Singleton
+    private let urlSession: URLSession
+    private let defaultParameterConfig: DefaultParameterConfig?
 
-    public static let shared = ApiClient()
+    public init(urlSession: URLSession = URLSession.shared, defaultParameterConfig: DefaultParameterConfig?) {
+        self.urlSession = urlSession
+        self.defaultParameterConfig = defaultParameterConfig
+    }
 
     // MARK: Default parameters
 
@@ -18,20 +22,6 @@ public class ApiClient: NetworkClient {
         }
     }
 
-    private static var defaultParameterConfig: DefaultParameterConfig?
-
-    private init() {
-        guard ApiClient.defaultParameterConfig != nil else {
-            fatalError("Error - you must call setup before accessing ApiClient.shared")
-        }
-    }
-
-    /// Function to setup default parameters.
-    /// - Parameter defaultParameterConfig: Default parameters struct for url and body parameters.
-    public class func setup(_ defaultParameterConfig: DefaultParameterConfig? = DefaultParameterConfig()) {
-        ApiClient.defaultParameterConfig = defaultParameterConfig
-    }
-
     public func request<T>(
         _ request: CoreModule.Request,
         queue _: DispatchQueue = .main,
@@ -41,7 +31,7 @@ public class ApiClient: NetworkClient {
             return completion(.failure(.invalidRequest))
         }
 
-        let task = URLSession.shared.dataTask(with: urlRequest) { data, response, error in
+        let task = urlSession.dataTask(with: urlRequest) { data, response, error in
             if let error = error {
                 completion(.failure(.custom(errorText: error.localizedDescription)))
             } else {
