@@ -5,7 +5,7 @@ public class ApiClient: NetworkClient {
     private let urlSession: URLSession
     private let defaultParameterConfig: DefaultParameterConfig?
 
-    public init(urlSession: URLSession = URLSession.shared, defaultParameterConfig: DefaultParameterConfig?) {
+    public init(urlSession: URLSession = URLSession.shared, defaultParameterConfig: DefaultParameterConfig? = nil) {
         self.urlSession = urlSession
         self.defaultParameterConfig = defaultParameterConfig
     }
@@ -99,7 +99,7 @@ public class ApiClient: NetworkClient {
     ) throws {
         do {
             if var bodyParameters = bodyParameters {
-                if let defaultBodyParameters = ApiClient.defaultParameterConfig?.defaultBodyParameters {
+                if let defaultBodyParameters = self.defaultParameterConfig?.defaultBodyParameters {
                     for (key, value) in defaultBodyParameters {
                         bodyParameters[key] = value
                     }
@@ -109,7 +109,7 @@ public class ApiClient: NetworkClient {
             }
 
             if var urlParameters = urlParameters {
-                if let defaultURLParameters = ApiClient.defaultParameterConfig?.defaultURLParameters {
+                if let defaultURLParameters = self.defaultParameterConfig?.defaultURLParameters {
                     for (key, value) in defaultURLParameters {
                         urlParameters[key] = value
                     }
