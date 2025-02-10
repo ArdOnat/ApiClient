@@ -1,5 +1,5 @@
 import Foundation
-import protocol CoreModule.Request
+import struct CoreModule.Request
 import enum CoreModule.NetworkError
 import typealias CoreModule.Parameters
 import typealias CoreModule.HTTPHeaders
@@ -8,34 +8,32 @@ protocol NetworkClient {
     func request<T: Decodable>(_ request: CoreModule.Request) async throws -> T
 }
 
-public final class ApiClient: NetworkClient {
-    
-    // MARK: Singleton
+public class ApiClient: NetworkClient {
     private let urlSession: URLSession
     private let defaultParameterConfig: DefaultParameterConfig?
-    
+
+    public init(urlSession: URLSession = URLSession.shared, defaultParameterConfig: DefaultParameterConfig? = nil) {
+        self.urlSession = urlSession
+        self.defaultParameterConfig = defaultParameterConfig
+    }
+
     // MARK: Default parameters
+
     public struct DefaultParameterConfig {
         let defaultURLParameters: Parameters?
         let defaultBodyParameters: Parameters?
-        
+
         public init(defaultURLParameters: Parameters? = nil, defaultBodyParameters: Parameters? = nil) {
             self.defaultURLParameters = defaultURLParameters
             self.defaultBodyParameters = defaultBodyParameters
         }
     }
-    
-    public init(urlSession: URLSession = .shared, defaultParameterConfig: DefaultParameterConfig? = nil) {
-        self.urlSession = urlSession
-        self.defaultParameterConfig = defaultParameterConfig
-    }
-    
     public func request<T: Decodable>(_ request: CoreModule.Request) async throws -> T {
         let createdRequest = try self.buildRequest(from: request)
         let (data, response) = try await URLSession.shared.data(for: createdRequest)
         
         guard response.validateStatusCode() else {
-            throw NetworkError.invalidStatusCode
+            throw NetworkError.decodingFailed
         }
         
         do {
@@ -102,7 +100,6 @@ public final class ApiClient: NetworkClient {
         }
     }
 
-    
     fileprivate func addAdditionalHeaders(_ additionalHeaders: CoreModule.HTTPHeaders?, request: inout URLRequest) {
         guard let headers = additionalHeaders else { return }
         for (key, value) in headers {
@@ -111,9 +108,9 @@ public final class ApiClient: NetworkClient {
     }
 }
 
-extension URLResponse {
-    var acceptableStatusCodes: Range<Int> { 200..<300 }
-    
+private extension URLResponse {
+    var acceptableStatusCodes: Range<Int> { 200 ..< 300 }
+
     func validateStatusCode() -> Bool {
         if let httpURLResponse = self as? HTTPURLResponse, acceptableStatusCodes.contains(httpURLResponse.statusCode) {
             return true
