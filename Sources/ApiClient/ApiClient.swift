@@ -1,17 +1,18 @@
-//
-//  File.swift
-//
-//
-//  Created by Arda Onat on 6.09.2021.
-//
-
 import Foundation
-import CoreModule
+import protocol CoreModule.Request
+import enum CoreModule.NetworkError
+import typealias CoreModule.Parameters
+import typealias CoreModule.HTTPHeaders
 
-public class ApiClient: NetworkClient {
+protocol NetworkClient {
+    func request<T: Decodable>(_ request: CoreModule.Request) async throws -> T
+}
+
+public final class ApiClient: NetworkClient {
     
     // MARK: Singleton
-    public static let shared = ApiClient()
+    private let urlSession: URLSession
+    private let defaultParameterConfig: DefaultParameterConfig?
     
     // MARK: Default parameters
     public struct DefaultParameterConfig {
@@ -24,45 +25,27 @@ public class ApiClient: NetworkClient {
         }
     }
     
-    private static var defaultParameterConfig: DefaultParameterConfig?
-    
-    private init () {
-        guard ApiClient.defaultParameterConfig != nil else {
-            fatalError("Error - you must call setup before accessing ApiClient.shared")
-        }
+    public init(urlSession: URLSession = .shared, defaultParameterConfig: DefaultParameterConfig? = nil) {
+        self.urlSession = urlSession
+        self.defaultParameterConfig = defaultParameterConfig
     }
     
-    /// Function to setup default parameters.
-    /// - Parameter defaultParameterConfig: Default parameters struct for url and body parameters.
-    public class func setup(_ defaultParameterConfig:DefaultParameterConfig? = DefaultParameterConfig()){
-        ApiClient.defaultParameterConfig = defaultParameterConfig
-    }
-    
-    public func request<T>(_ request: CoreModule.Request, queue: DispatchQueue = .main, completion: @escaping (Result<T, NetworkError>) -> ()) where T : Decodable {
-        guard let request = try? self.buildRequest(from: request) else {
-            return completion(.failure(.invalidRequest))
+    public func request<T: Decodable>(_ request: CoreModule.Request) async throws -> T {
+        let createdRequest = try self.buildRequest(from: request)
+        let (data, response) = try await URLSession.shared.data(for: createdRequest)
+        
+        guard response.validateStatusCode() else {
+            throw NetworkError.invalidStatusCode
         }
         
-        let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-            if let error = error {
-                completion(.failure(.custom(errorText: error.localizedDescription)))
-            } else {
-                if let response = response, response.validateStatusCode() {
-                    if let data = data, let decodedResponse = try? JSONDecoder().decode(T.self, from: data) {
-                        completion(.success(decodedResponse))
-                    } else {
-                        completion(.failure(.decodingFailed))
-                    }
-                } else {
-                    response == nil ? completion(.failure(.custom(errorText: "URL response is nil."))) : completion(.failure(.invalidStatusCode))
-                }
-            }
+        do {
+            return try JSONDecoder().decode(T.self, from: data)
+        } catch {
+            throw NetworkError.decodingFailed
         }
-        
-        task.resume()
     }
 
-    fileprivate func buildRequest(from requestToMake: CoreModule.Request) throws -> URLRequest {
+    private func buildRequest(from requestToMake: CoreModule.Request) throws -> URLRequest {
         guard let baseURL = URL(string: requestToMake.apiEnvironment.baseURL) else {
             throw NetworkError.invalidBaseURL
         }
@@ -84,7 +67,7 @@ public class ApiClient: NetworkClient {
     fileprivate func configureParameters(bodyParameters: Parameters?, urlParameters: Parameters?, request: inout URLRequest) throws {
         do {
             if var bodyParameters = bodyParameters {
-                if let defaultBodyParameters = ApiClient.defaultParameterConfig?.defaultBodyParameters {
+                if let defaultBodyParameters = defaultParameterConfig?.defaultBodyParameters {
                     for (key, value) in defaultBodyParameters {
                         bodyParameters[key] = value
                     }
@@ -94,7 +77,7 @@ public class ApiClient: NetworkClient {
             }
             
             if var urlParameters = urlParameters {
-                if let defaultURLParameters = ApiClient.defaultParameterConfig?.defaultURLParameters {
+                if let defaultURLParameters = defaultParameterConfig?.defaultURLParameters {
                     for (key, value) in defaultURLParameters {
                         urlParameters[key] = value
                     }
