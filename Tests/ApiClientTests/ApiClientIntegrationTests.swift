@@ -1,5 +1,5 @@
 import XCTest
-import protocol CoreModule.Request
+import struct CoreModule.Request
 import enum CoreModule.NetworkError
 import typealias CoreModule.Parameters
 import typealias CoreModule.HTTPHeaders
@@ -27,47 +27,12 @@ final class ApiClientIntegrationTests: XCTestCase {
     }
     
     func testFetchWeatherDataWithCityNameRequest() async {
-        let response: PokemonInformationModel = try! await apiClient.request(PokemonRequest.init(request: .pokemonDitto, apiEnvironment: ApiEnvironment(environmentType: PokemonNetworkEnvironment.prod)))
+        let request = Request(apiEnvironment: ApiEnvironment(environmentType: PokemonNetworkEnvironment.prod), path: "pokemon/ditto", httpMethod: .get)
+        
+
+        let response: PokemonInformationModel = try! await apiClient.request(request)
 
         XCTAssertEqual(response.id, 132)
-    }
-    
-    private struct PokemonRequest: Request {
-        
-        enum Request {
-            case pokemonDitto
-        }
-        
-        var request: PokemonRequest.Request
-        var apiEnvironment: ApiEnvironment
-        
-        init (request: PokemonRequest.Request, apiEnvironment: ApiEnvironment) {
-            self.request = request
-            self.apiEnvironment = apiEnvironment
-        }
-        
-        var path: String {
-            switch request {
-            case .pokemonDitto:
-                return "pokemon/ditto"
-            }
-        }
-        
-        var httpMethod: HTTPMethods {
-            return .get
-        }
-        
-        var urlParameters: Parameters? {
-            return nil
-        }
-        
-        var bodyParameters: Parameters? {
-            return nil
-        }
-        
-        var httpHeaders: HTTPHeaders? {
-            return nil
-        }
     }
     
     private enum PokemonNetworkEnvironment: NetworkEnvironment {

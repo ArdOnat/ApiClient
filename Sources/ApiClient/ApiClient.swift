@@ -3,6 +3,7 @@ import struct CoreModule.Request
 import enum CoreModule.NetworkError
 import typealias CoreModule.Parameters
 import typealias CoreModule.HTTPHeaders
+import struct CoreModule.ErroredRequestDetail
 
 protocol NetworkClient {
     func request<T: Decodable>(_ request: CoreModule.Request) async throws -> T
@@ -33,14 +34,22 @@ public class ApiClient: NetworkClient {
         let (data, response) = try await URLSession.shared.data(for: createdRequest)
         
         guard response.validateStatusCode() else {
+            if let httpUrlResponse = response as? HTTPURLResponse {
+                let erroredRequestDetail = ErroredRequestDetail(
+                    statusCode: httpUrlResponse.statusCode,
+                    errorResponseData: data,
+                    request: request
+                )
+                throw NetworkError.invalidStatusCode(requestDetail: erroredRequestDetail)
+            }
+            throw NetworkError.custom(errorText: "HTTP URL Response is not available")
+        }
+
+        guard let decodedResponse = try? JSONDecoder().decode(T.self, from: data) else {
             throw NetworkError.decodingFailed
         }
-        
-        do {
-            return try JSONDecoder().decode(T.self, from: data)
-        } catch {
-            throw NetworkError.decodingFailed
-        }
+
+        return decodedResponse
     }
 
     fileprivate func buildRequest(from requestToMake: CoreModule.Request) throws -> URLRequest {
