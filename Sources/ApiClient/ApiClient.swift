@@ -45,50 +45,63 @@ public final class ApiClient: NetworkClient {
         }
     }
 
-    private func buildRequest(from requestToMake: CoreModule.Request) throws -> URLRequest {
+    fileprivate func buildRequest(from requestToMake: CoreModule.Request) throws -> URLRequest {
         guard let baseURL = URL(string: requestToMake.apiEnvironment.baseURL) else {
             throw NetworkError.invalidBaseURL
         }
 
-        var request = URLRequest(url: baseURL.appendingPathComponent(requestToMake.path), cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 10.0)
+        var request = URLRequest(
+            url: baseURL.appendingPathComponent(requestToMake.path),
+            cachePolicy: .reloadIgnoringLocalAndRemoteCacheData,
+            timeoutInterval: 10.0
+        )
         request.httpMethod = requestToMake.httpMethod.rawValue
-        
+
         do {
             if let additionalHeaders = requestToMake.httpHeaders {
-                self.addAdditionalHeaders(additionalHeaders, request: &request)
+                addAdditionalHeaders(additionalHeaders, request: &request)
             }
-            try self.configureParameters(bodyParameters: requestToMake.bodyParameters, urlParameters: requestToMake.urlParameters, request: &request)
+            try configureParameters(
+                bodyParameters: requestToMake.bodyParameters,
+                urlParameters: requestToMake.urlParameters,
+                request: &request
+            )
             return request
         } catch {
             throw error
         }
     }
-    
-    fileprivate func configureParameters(bodyParameters: Parameters?, urlParameters: Parameters?, request: inout URLRequest) throws {
+
+    fileprivate func configureParameters(
+        bodyParameters: Parameters?,
+        urlParameters: Parameters?,
+        request: inout URLRequest
+    ) throws {
         do {
             if var bodyParameters = bodyParameters {
-                if let defaultBodyParameters = defaultParameterConfig?.defaultBodyParameters {
+                if let defaultBodyParameters = self.defaultParameterConfig?.defaultBodyParameters {
                     for (key, value) in defaultBodyParameters {
                         bodyParameters[key] = value
                     }
                 }
-                
+
                 try JSONParameterEncoder.encode(urlRequest: &request, with: bodyParameters)
             }
-            
+
             if var urlParameters = urlParameters {
-                if let defaultURLParameters = defaultParameterConfig?.defaultURLParameters {
+                if let defaultURLParameters = self.defaultParameterConfig?.defaultURLParameters {
                     for (key, value) in defaultURLParameters {
                         urlParameters[key] = value
                     }
                 }
-                
+
                 try URLParameterEncoder.encode(urlRequest: &request, with: urlParameters)
             }
         } catch {
             throw error
         }
     }
+
     
     fileprivate func addAdditionalHeaders(_ additionalHeaders: CoreModule.HTTPHeaders?, request: inout URLRequest) {
         guard let headers = additionalHeaders else { return }
